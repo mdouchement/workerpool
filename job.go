@@ -21,6 +21,8 @@ const (
 	COMPLETED = "completed"
 	// FAILED state when job is terminated with error.
 	FAILED = "failed"
+	// CANCELLED state when job is cancelled by the user.
+	CANCELLED = "cancelled"
 )
 
 type (

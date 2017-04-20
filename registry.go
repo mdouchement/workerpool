@@ -1,8 +1,6 @@
 package workerpool
 
-import (
-	"sync"
-)
+import "sync"
 
 type registry struct {
 	sync.RWMutex
@@ -22,6 +20,7 @@ func newRegistry(p *Workerpool) *registry {
 			RUNNING:   make(map[string]struct{}, 0),
 			COMPLETED: make(map[string]struct{}, 0),
 			FAILED:    make(map[string]struct{}, 0),
+			CANCELLED: make(map[string]struct{}, 0),
 		},
 	}
 	r.init()
@@ -36,6 +35,7 @@ func (r *registry) init() {
 				if job := r.get(id); job != nil {
 					r.pool.log.Printf("workerpool: Canceling job %s\n", job.ID())
 					job.Cancel()
+					job.setStatus(CANCELLED)
 				}
 			}
 		}
@@ -97,6 +97,8 @@ func (r *registry) updateStatus(id, status string) {
 		fallthrough
 	case RUNNING:
 		r.sts[status][id] = struct{}{}
+	case CANCELLED:
+		fallthrough
 	case COMPLETED:
 		fallthrough
 	case FAILED:
