@@ -1,5 +1,6 @@
 # Workerpool
 
+[![CircleCI](https://circleci.com/gh/PredicSis/workerpool.svg?style=shield)](https://circleci.com/gh/PredicSis/workerpool)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/PredicSis/workerpool)
 [![Go Report Card](https://goreportcard.com/badge/github.com/PredicSis/workerpool)](https://goreportcard.com/report/github.com/PredicSis/workerpool)
 [![License](https://img.shields.io/github/license/PredicSis/workerpool.svg)](http://opensource.org/licenses/MIT)
