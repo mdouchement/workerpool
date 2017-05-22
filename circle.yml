@@ -1,0 +1,9 @@
+dependencies:
+  pre:
+    - go get -u github.com/alecthomas/gometalinter
+    - gometalinter --install
+
+test:
+  override:
+    - gometalinter --config=gometalinter.json ./...
+    - go test
