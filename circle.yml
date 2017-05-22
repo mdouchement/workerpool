@@ -6,4 +6,4 @@ dependencies:
 test:
   override:
     - gometalinter --config=gometalinter.json ./...
-    - go test
+    - go test -race

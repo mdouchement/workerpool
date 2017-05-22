@@ -134,6 +134,9 @@ func TestOnStatusChangeFunc(t *testing.T) {
 	status := workerpool.PENDING
 	job := &workerpool.Job{
 		ActionFunc: func(j *workerpool.Job) error {
+			return nil
+		},
+		AfterFunc: func(j *workerpool.Job) error {
 			defer close(changed)
 			return nil
 		},
