@@ -71,7 +71,7 @@ func (j *Job) Init(log Logger) {
 			}
 			stack := make([]byte, 4<<10)
 			length := runtime.Stack(stack, true)
-			log.Printf("[PANIC RECOVER] %s %s\n", j.err, stack[:length])
+			log.Printf("[PANIC RECOVER] %s %s\n", err, stack[:length])
 
 			j.setError(err)
 			j.setStatus(FAILED)
