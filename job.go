@@ -42,6 +42,7 @@ var (
 // A Job performs actions.
 type Job struct {
 	recover            func()
+	once               sync.Once
 	mu                 sync.Mutex
 	id                 string
 	status             string
@@ -57,7 +58,6 @@ type Job struct {
 // Init initializes the job.
 // It should be only called by the worker.
 func (j *Job) Init(log Logger) {
-	j.id = uuid.NewV4().String()
 	j.mu = sync.Mutex{}
 
 	j.recover = func() {
@@ -108,6 +108,10 @@ func (j *Job) Init(log Logger) {
 
 // ID returns the job's identifier.
 func (j *Job) ID() string {
+	j.once.Do(func() {
+		j.id = uuid.NewV4().String()
+	})
+
 	return j.id
 }
 
