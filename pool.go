@@ -81,8 +81,8 @@ func New() *Workerpool {
 func (w *Workerpool) Send(job *Job) string {
 	job.Init(w.log)
 	w.reg.add(job)
-	w.jobs <- job.Run
 	job.setStatus(PENDING)
+	w.jobs <- job.Run
 
 	return job.ID()
 }
