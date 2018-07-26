@@ -1,6 +1,6 @@
 package workerpool_test
 
-import "github.com/PredicSis/workerpool"
+import "github.com/mdouchement/workerpool"
 
 func init() {
 	// Hide logs during tests

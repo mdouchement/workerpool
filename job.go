@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"sync"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid"
 
 	tomb "gopkg.in/tomb.v2"
 )
@@ -109,7 +109,7 @@ func (j *Job) Init(log Logger) {
 // ID returns the job's identifier.
 func (j *Job) ID() string {
 	j.once.Do(func() {
-		j.id = uuid.NewV4().String()
+		j.id = uuid.Must(uuid.NewV4()).String()
 	})
 
 	return j.id

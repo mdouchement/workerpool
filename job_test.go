@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/PredicSis/workerpool"
+	"github.com/mdouchement/workerpool"
 )
 
 func TestInit(t *testing.T) {

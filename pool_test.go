@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PredicSis/workerpool"
+	"github.com/mdouchement/workerpool"
 )
 
 // All tests are chained in this order.

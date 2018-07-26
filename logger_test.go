@@ -3,7 +3,7 @@ package workerpool_test
 import (
 	"testing"
 
-	"github.com/PredicSis/workerpool"
+	"github.com/mdouchement/workerpool"
 )
 
 func TestLogger(t *testing.T) {
