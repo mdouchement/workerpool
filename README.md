@@ -1,9 +1,9 @@
 # Workerpool
 
-[![CircleCI](https://circleci.com/gh/PredicSis/workerpool.svg?style=shield)](https://circleci.com/gh/PredicSis/workerpool)
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/PredicSis/workerpool)
-[![Go Report Card](https://goreportcard.com/badge/github.com/PredicSis/workerpool)](https://goreportcard.com/report/github.com/PredicSis/workerpool)
-[![License](https://img.shields.io/github/license/PredicSis/workerpool.svg)](http://opensource.org/licenses/MIT)
+[![CircleCI](https://circleci.com/gh/mdouchement/workerpool.svg?style=shield)](https://circleci.com/gh/mdouchement/workerpool)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/mdouchement/workerpool)
+[![Go Report Card](https://goreportcard.com/badge/github.com/mdouchement/workerpool)](https://goreportcard.com/report/github.com/mdouchement/workerpool)
+[![License](https://img.shields.io/github/license/mdouchement/workerpool.svg)](http://opensource.org/licenses/MIT)
 
 Asynchronous in-memory workers for Go based projects.
 
@@ -18,7 +18,7 @@ This project aimed to provide the following points:
 ## Usage
 
 ```sh
-go get github.com/PredicSis/workerpool
+go get github.com/mdouchement/workerpool
 ```
 
 ```go
@@ -27,7 +27,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/PredicSis/workerpool"
+	"github.com/mdouchement/workerpool"
 )
 
 func main() {
