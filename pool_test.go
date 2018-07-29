@@ -1,6 +1,7 @@
 package workerpool_test
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 	"time"
@@ -56,6 +57,31 @@ func TestGetJobStatus(t *testing.T) {
 	}
 }
 
+func TestOnError(t *testing.T) {
+	count := 0
+	job := &workerpool.Job{
+		AfterFunc: func(j *workerpool.Job) error {
+			return errors.New("42")
+		},
+
+		ActionFunc: workerpool.EmptyAction,
+
+		OnStatusChangeFunc: func(j *workerpool.Job) error {
+			if j.Status() == workerpool.FAILED {
+				count++
+			}
+			return nil
+		},
+	}
+	workerpool.Send(job)
+
+	<-job.Context().Done() // Block until done
+
+	if count != 1 {
+		t.Error("Expected to have failed status once")
+	}
+}
+
 func TestCancelJob(t *testing.T) {
 	stopped := make(chan bool)
 
@@ -65,12 +91,8 @@ func TestCancelJob(t *testing.T) {
 
 			ctx := j.Context()
 
-			for {
-				select {
-				case <-ctx.Done(): // Block until done
-					return nil
-				}
-			}
+			<-ctx.Done() // Block until done
+			return nil
 		},
 	}
 	jobID := workerpool.Send(job)
@@ -110,7 +132,7 @@ func TestGetJobsMetrics(t *testing.T) {
 		workerpool.PENDING:   0,
 		workerpool.RUNNING:   0,
 		workerpool.COMPLETED: 3,
-		workerpool.FAILED:    0,
+		workerpool.FAILED:    1,
 		workerpool.CANCELLED: 1,
 	}
 	metrics := workerpool.GetJobsMetrics()
