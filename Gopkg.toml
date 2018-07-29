@@ -27,7 +27,7 @@
 
 [[constraint]]
   name = "github.com/dc0d/workerpool"
-  version = "v2"
+  version = "v3.0.3"
 
 [[constraint]]
   name = "github.com/gofrs/uuid"
