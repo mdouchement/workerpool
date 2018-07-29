@@ -2,12 +2,12 @@
 
 
 [[projects]]
-  digest = "1:9c45cf9e4d166423d850c3386f57d076858e1a4201389ff296452ca002cb9c25"
+  digest = "1:25632890631dda88c0b1558142210bdda9e87af78d10ebfdfda599ff9b7e3780"
   name = "github.com/dc0d/workerpool"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3d2f3651d7bd305d925aaae58c9409d8b90c265a"
-  version = "v2"
+  revision = "b089d6fbecae0a3e1364d825c7957359a9d75e38"
+  version = "v3.0.3"
 
 [[projects]]
   digest = "1:d0c57cee8301a361a6daea88e6a4f7c8bc41c9e2ea18a5d2d2b42818cd13c1ff"
@@ -23,7 +23,7 @@
   name = "golang.org/x/net"
   packages = ["context"]
   pruneopts = "UT"
-  revision = "3673e40ba22529d22c3fd7c93e97b0ce50fa7bdd"
+  revision = "c4299a1a0d8524c11563db160fbf9bddbceadb21"
 
 [[projects]]
   branch = "v2"

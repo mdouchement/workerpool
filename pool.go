@@ -1,7 +1,6 @@
 package workerpool
 
 import (
-	"context"
 	"log"
 	"os"
 	"sync"
@@ -56,7 +55,6 @@ func SetLogger(l Logger) {
 type Workerpool struct {
 	log       Logger
 	reg       *registry
-	jobs      chan func()
 	pool      *wp.WorkerPool
 	poolMutex sync.Mutex
 	workers   []chan struct{}
@@ -64,11 +62,8 @@ type Workerpool struct {
 
 // New instanciates a new Workerpool.
 func New() *Workerpool {
-	jobs := make(chan func(), 10000)
-	p, _ := wp.WithContext(context.Background(), 1, jobs)
 	w := &Workerpool{
-		pool:    p,
-		jobs:    jobs,
+		pool:    wp.New(-1, 10000), // -1 means runtime.NumCPU() workers
 		workers: make([]chan struct{}, 0),
 		log:     log.New(os.Stdout, "workerpool: ", log.LUTC),
 	}
@@ -82,7 +77,7 @@ func (w *Workerpool) Send(job *Job) string {
 	job.Init(w.log)
 	w.reg.add(job)
 	job.setStatus(PENDING)
-	w.jobs <- job.Run
+	w.pool.Queue(job.Run)
 
 	return job.ID()
 }

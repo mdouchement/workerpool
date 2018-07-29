@@ -105,6 +105,7 @@ func TestSetPoolSize(t *testing.T) {
 }
 
 func TestGetJobsMetrics(t *testing.T) {
+	time.Sleep(4 * time.Second) // Wait running jobs
 	m := map[string]interface{}{
 		workerpool.PENDING:   0,
 		workerpool.RUNNING:   0,
