@@ -8,7 +8,7 @@ import (
 	wp "github.com/dc0d/workerpool"
 )
 
-var pool = New()
+var pool = NewDefault()
 
 // Send enqueues the given job and returns its ID.
 func Send(job *Job) string {
@@ -60,10 +60,15 @@ type Workerpool struct {
 	workers   []chan struct{}
 }
 
+// NewDefault instanciates a new Workerpool with a queue size of 10k elements.
+func NewDefault() *Workerpool {
+	return New(10000)
+}
+
 // New instanciates a new Workerpool.
-func New() *Workerpool {
+func New(queueSize int) *Workerpool {
 	w := &Workerpool{
-		pool:    wp.New(-1, 10000), // -1 means runtime.NumCPU() workers
+		pool:    wp.New(-1, queueSize), // -1 means runtime.NumCPU() workers
 		workers: make([]chan struct{}, 0),
 		log:     log.New(os.Stdout, "workerpool: ", log.LUTC),
 	}
