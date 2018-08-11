@@ -13,14 +13,14 @@ type registry struct {
 func newRegistry(p *Workerpool) *registry {
 	r := &registry{
 		pool:       p,
-		jobs:       make(map[string]*Job, 0),
+		jobs:       make(map[string]*Job),
 		cancelChan: make(chan string, 500),
 		sts: map[string]map[string]struct{}{
-			PENDING:   make(map[string]struct{}, 0),
-			RUNNING:   make(map[string]struct{}, 0),
-			COMPLETED: make(map[string]struct{}, 0),
-			FAILED:    make(map[string]struct{}, 0),
-			CANCELLED: make(map[string]struct{}, 0),
+			PENDING:   make(map[string]struct{}),
+			RUNNING:   make(map[string]struct{}),
+			COMPLETED: make(map[string]struct{}),
+			FAILED:    make(map[string]struct{}),
+			CANCELLED: make(map[string]struct{}),
 		},
 	}
 	r.init()
@@ -29,14 +29,11 @@ func newRegistry(p *Workerpool) *registry {
 
 func (r *registry) init() {
 	go func() {
-		for {
-			select {
-			case id := <-r.cancelChan:
-				if job := r.get(id); job != nil {
-					r.pool.log.Printf("workerpool: Canceling job %s\n", job.ID())
-					job.Cancel()
-					job.setStatus(CANCELLED)
-				}
+		for id := range r.cancelChan {
+			if job := r.get(id); job != nil {
+				r.pool.log.Printf("workerpool: Canceling job %s\n", job.ID())
+				job.Cancel()
+				job.setStatus(CANCELLED)
 			}
 		}
 	}()
@@ -47,10 +44,8 @@ func (r *registry) add(job *Job) string {
 	job.OnStatusChangeFunc = func(j *Job) error {
 		r.pool.log.Printf("workerpool: Job %s is %s\n", job.ID(), j.Status())
 
-		change(j)
-
-		r.updateStatus(job.ID(), j.Status())
-		return nil
+		defer r.updateStatus(job.ID(), j.Status())
+		return change(j)
 	}
 
 	r.Lock()
@@ -76,7 +71,7 @@ func (r *registry) statuses() map[string]interface{} {
 	r.Lock()
 	defer r.Unlock()
 
-	sts := make(map[string]interface{}, 0)
+	sts := make(map[string]interface{})
 	for k, v := range r.sts {
 		sts[k] = len(v)
 	}

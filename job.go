@@ -75,7 +75,6 @@ func (j *Job) Init(log Logger) {
 
 			j.setError(err)
 			j.setStatus(FAILED)
-			j.AfterFunc(j)
 		}
 	}
 
@@ -117,7 +116,7 @@ func (j *Job) ID() string {
 
 // Context returns a new context for the job.
 func (j *Job) Context() context.Context {
-	return j.tomb.Context(nil)
+	return j.tomb.Context(context.Background())
 }
 
 // Run starts the job.
@@ -127,16 +126,20 @@ func (j *Job) Run() {
 	}
 
 	j.tomb.Go(j.run)
-	j.tomb.Wait()
+	_ = j.tomb.Wait() // err handled in `j.run`
 }
 
 // Cancel stops the job execution.
 func (j *Job) Cancel() {
 	defer j.recover()
 
-	j.CancelFunc(j)
+	err := j.CancelFunc(j)
+	if err != nil {
+		j.setError(err)
+	}
+
 	j.tomb.Kill(nil)
-	j.err = j.tomb.Wait()
+	_ = j.tomb.Wait() // err handled in `j.run`
 }
 
 // Status returns the job's status.
@@ -148,7 +151,11 @@ func (j *Job) Status() string {
 }
 
 func (j *Job) setStatus(status string) {
-	defer j.OnStatusChangeFunc(j)
+	defer func() {
+		if err := j.OnStatusChangeFunc(j); err != nil && j.Error() == nil {
+			j.setError(err)
+		}
+	}()
 
 	j.mu.Lock()
 	defer j.mu.Unlock()
@@ -171,20 +178,31 @@ func (j *Job) setError(err error) {
 	j.err = err
 }
 
-func (j *Job) run() error {
+func (j *Job) run() (err error) {
 	defer j.recover()
 
-	defer j.AfterFunc(j)
 	j.setStatus(RUNNING)
-	j.BeforeFunc(j)
 
-	var err error
-	if err = j.ActionFunc(j); err != nil {
+	if err = j.BeforeFunc(j); err != nil {
 		j.setError(err)
 		j.setStatus(FAILED)
-	} else {
-		j.setStatus(COMPLETED)
+		return
 	}
 
-	return err
+	err = j.ActionFunc(j)
+	if err != nil {
+		j.setError(err)
+		j.setStatus(FAILED)
+		return
+	}
+
+	err = j.AfterFunc(j)
+	if err != nil {
+		j.setError(err)
+		j.setStatus(FAILED)
+		return
+	}
+
+	j.setStatus(COMPLETED)
+	return nil
 }

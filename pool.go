@@ -81,7 +81,6 @@ func New(workers, queueSize int) *Workerpool {
 func (w *Workerpool) Send(job *Job) string {
 	job.Init(w.log)
 	w.reg.add(job)
-	job.setStatus(PENDING)
 	w.pool.Queue(job.Run)
 
 	return job.ID()
@@ -132,7 +131,7 @@ func (w *Workerpool) SetPoolSize(n int) {
 		// Expand
 		n -= nbOfWorkers
 		for i := 0; i < n; i++ {
-			quit := make(chan struct{}, 0)
+			quit := make(chan struct{})
 			w.pool.Expand(1, 0, quit)
 			w.workers = append(w.workers, quit)
 			w.log.Println("A worker has been started")

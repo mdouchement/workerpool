@@ -130,14 +130,9 @@ func TestError(t *testing.T) {
 }
 
 func TestOnStatusChangeFunc(t *testing.T) {
-	changed := make(chan bool)
 	status := workerpool.PENDING
 	job := &workerpool.Job{
 		ActionFunc: func(j *workerpool.Job) error {
-			return nil
-		},
-		AfterFunc: func(j *workerpool.Job) error {
-			defer close(changed)
 			return nil
 		},
 		OnStatusChangeFunc: func(j *workerpool.Job) error {
@@ -148,7 +143,7 @@ func TestOnStatusChangeFunc(t *testing.T) {
 	job.Init(&nullLogger{})
 
 	go job.Run()
-	<-changed
+	<-job.Context().Done()
 
 	if status != workerpool.COMPLETED {
 		t.Errorf("Expected '%v' but got '%v'", workerpool.COMPLETED, status)
