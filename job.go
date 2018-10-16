@@ -42,12 +42,14 @@ var (
 // A Job performs actions.
 type Job struct {
 	recover            func()
+	isInitialized      bool
 	once               sync.Once
 	mu                 sync.Mutex
 	id                 string
 	status             string
 	tomb               *tomb.Tomb
 	err                error
+	ctx                context.Context
 	OnStatusChangeFunc JobAction
 	BeforeFunc         JobAction
 	ActionFunc         JobAction
@@ -58,6 +60,7 @@ type Job struct {
 // Init initializes the job.
 // It should be only called by the worker.
 func (j *Job) Init(log Logger) {
+	j.isInitialized = true
 	j.mu = sync.Mutex{}
 
 	j.recover = func() {
@@ -78,7 +81,10 @@ func (j *Job) Init(log Logger) {
 		}
 	}
 
-	t, _ := tomb.WithContext(context.Background())
+	if j.ctx == nil {
+		j.ctx = context.Background()
+	}
+	t, _ := tomb.WithContext(j.ctx)
 	j.tomb = t
 
 	if j.ActionFunc == nil {
@@ -116,7 +122,16 @@ func (j *Job) ID() string {
 
 // Context returns a new context for the job.
 func (j *Job) Context() context.Context {
-	return j.tomb.Context(context.Background())
+	return j.tomb.Context(j.ctx)
+}
+
+// SetContext sets the given context to the job.
+// It panics if the job is queued.
+func (j *Job) SetContext(ctx context.Context) {
+	if j.isInitialized {
+		panic("Context cannot be updated for a queued job")
+	}
+	j.ctx = ctx
 }
 
 // Run starts the job.
