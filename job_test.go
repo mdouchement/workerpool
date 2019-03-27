@@ -1,20 +1,18 @@
 package workerpool_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/mdouchement/workerpool"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestInit(t *testing.T) {
+func TestJob_Init(t *testing.T) {
 	job := &workerpool.Job{}
 	job.Init(&nullLogger{})
 
 	// Check missing ActionFunc
-	if job.Error() != workerpool.ErrActionNotDefined {
-		t.Errorf("Expected '%v' but got '%v'", workerpool.ErrActionNotDefined, job.Error())
-	}
+	assert.Equal(t, workerpool.ErrActionNotDefined, job.Error())
 
 	job = &workerpool.Job{
 		ActionFunc: func(j *workerpool.Job) error {
@@ -23,12 +21,10 @@ func TestInit(t *testing.T) {
 	}
 	job.Init(&nullLogger{})
 
-	if job.Error() != nil {
-		t.Errorf("Expected '%v' but got '%v'", nil, job.Error())
-	}
+	assert.Nil(t, job.Error())
 }
 
-func TestID(t *testing.T) {
+func TestJob_ID(t *testing.T) {
 	job := &workerpool.Job{
 		ActionFunc: func(j *workerpool.Job) error {
 			return nil
@@ -36,12 +32,10 @@ func TestID(t *testing.T) {
 	}
 	job.Init(&nullLogger{})
 
-	if len(job.ID()) != 36 {
-		t.Errorf("Expected '%v' but got '%v'", 36, len(job.ID()))
-	}
+	assert.Regexp(t, `^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`, job.ID())
 }
 
-func TestContext(t *testing.T) {
+func TestJob_Context(t *testing.T) {
 	job := &workerpool.Job{
 		ActionFunc: func(j *workerpool.Job) error {
 			return nil
@@ -54,12 +48,10 @@ func TestContext(t *testing.T) {
 
 	done := <-ctx.Done()
 
-	if !reflect.DeepEqual(done, struct{}{}) {
-		t.Errorf("Expected '%v' but got '%v'", struct{}{}, done)
-	}
+	assert.Equal(t, struct{}{}, done)
 }
 
-func TestRun(t *testing.T) {
+func TestJob_Run(t *testing.T) {
 	hasRun := false
 	job := &workerpool.Job{
 		ActionFunc: func(j *workerpool.Job) error {
@@ -71,16 +63,11 @@ func TestRun(t *testing.T) {
 
 	job.Run()
 
-	if !hasRun {
-		t.Errorf("Expected '%v' but got '%v'", true, hasRun)
-	}
-
-	if job.Status() != workerpool.COMPLETED {
-		t.Errorf("Expected '%v' but got '%v'", job.Status(), workerpool.COMPLETED)
-	}
+	assert.True(t, hasRun)
+	assert.Equal(t, workerpool.COMPLETED, job.Status())
 }
 
-func TestCancel(t *testing.T) {
+func TestJob_Cancel(t *testing.T) {
 	cancelled := false
 	job := &workerpool.Job{
 		ActionFunc: func(j *workerpool.Job) error {
@@ -98,16 +85,11 @@ func TestCancel(t *testing.T) {
 
 	done := <-ctx.Done()
 
-	if !reflect.DeepEqual(done, struct{}{}) {
-		t.Errorf("Expected '%v' but got '%v'", struct{}{}, done)
-	}
-
-	if !cancelled {
-		t.Errorf("Expected '%v' but got '%v'", true, cancelled)
-	}
+	assert.Equal(t, struct{}{}, done)
+	assert.True(t, cancelled)
 }
 
-func TestStatus(t *testing.T) {
+func TestJob_Status(t *testing.T) {
 	job := &workerpool.Job{
 		ActionFunc: func(j *workerpool.Job) error {
 			return nil
@@ -115,21 +97,29 @@ func TestStatus(t *testing.T) {
 	}
 	job.Init(&nullLogger{})
 
-	if job.Status() != workerpool.PENDING {
-		t.Errorf("Expected '%v' but got '%v'", workerpool.PENDING, job.Status())
-	}
+	assert.Equal(t, workerpool.PENDING, job.Status())
 }
 
-func TestError(t *testing.T) {
+func TestJob_Error(t *testing.T) {
 	job := &workerpool.Job{}
 	job.Init(&nullLogger{})
 
-	if job.Error() != workerpool.ErrActionNotDefined {
-		t.Errorf("Expected '%v' but got '%v'", workerpool.ErrActionNotDefined, job.Error())
-	}
+	assert.Equal(t, workerpool.ErrActionNotDefined, job.Error())
 }
 
-func TestOnStatusChangeFunc(t *testing.T) {
+func TestJob_ErrHandler(t *testing.T) {
+	var errFromHandler error
+	job := &workerpool.Job{
+		ErrHandler: func(err error, panic bool) {
+			errFromHandler = err
+		},
+	}
+	job.Init(&nullLogger{})
+
+	assert.Equal(t, workerpool.ErrActionNotDefined, errFromHandler)
+}
+
+func TestJob_OnStatusChangeFunc(t *testing.T) {
 	status := workerpool.PENDING
 	job := &workerpool.Job{
 		ActionFunc: func(j *workerpool.Job) error {
@@ -145,7 +135,5 @@ func TestOnStatusChangeFunc(t *testing.T) {
 	go job.Run()
 	<-job.Context().Done()
 
-	if status != workerpool.COMPLETED {
-		t.Errorf("Expected '%v' but got '%v'", workerpool.COMPLETED, status)
-	}
+	assert.Equal(t, workerpool.COMPLETED, status)
 }

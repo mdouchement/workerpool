@@ -55,6 +55,8 @@ type Job struct {
 	ActionFunc         JobAction
 	AfterFunc          JobAction
 	CancelFunc         JobAction
+	// ErrHandler is executed when an error or a panic occur.
+	ErrHandler func(err error, panic bool)
 }
 
 // Init initializes the job.
@@ -62,6 +64,19 @@ type Job struct {
 func (j *Job) Init(log Logger) {
 	j.isInitialized = true
 	j.mu = sync.Mutex{}
+
+	if j.ErrHandler == nil {
+		j.ErrHandler = func(err error, panic bool) {
+			if panic {
+				stack := make([]byte, 4<<10)
+				length := runtime.Stack(stack, true)
+				log.Printf("[PANIC RECOVER] %s %s\n", err, stack[:length])
+				return
+			}
+
+			log.Println(err)
+		}
+	}
 
 	j.recover = func() {
 		if r := recover(); r != nil {
@@ -72,12 +87,10 @@ func (j *Job) Init(log Logger) {
 			default:
 				err = fmt.Errorf("%v", r)
 			}
-			stack := make([]byte, 4<<10)
-			length := runtime.Stack(stack, true)
-			log.Printf("[PANIC RECOVER] %s %s\n", err, stack[:length])
 
-			j.setError(err)
 			j.setStatus(FAILED)
+			j.setError(err)
+			j.ErrHandler(err, true)
 		}
 	}
 
@@ -187,6 +200,8 @@ func (j *Job) Error() error {
 }
 
 func (j *Job) setError(err error) {
+	defer j.ErrHandler(err, false)
+
 	j.mu.Lock()
 	defer j.mu.Unlock()
 
@@ -199,22 +214,22 @@ func (j *Job) run() (err error) {
 	j.setStatus(RUNNING)
 
 	if err = j.BeforeFunc(j); err != nil {
-		j.setError(err)
 		j.setStatus(FAILED)
+		j.setError(err)
 		return
 	}
 
 	err = j.ActionFunc(j)
 	if err != nil {
-		j.setError(err)
 		j.setStatus(FAILED)
+		j.setError(err)
 		return
 	}
 
 	err = j.AfterFunc(j)
 	if err != nil {
-		j.setError(err)
 		j.setStatus(FAILED)
+		j.setError(err)
 		return
 	}
 
