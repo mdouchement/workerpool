@@ -63,6 +63,11 @@ func main() {
 			fmt.Println("Execute cleanup function")
 			return nil
 		},
+
+    // Triggered when an error or panic occurred.
+    ErrHandler: func(err error, panic bool) {
+      // Do something with the error.
+    },
 	}
 
 	id := workerpool.Send(job)
