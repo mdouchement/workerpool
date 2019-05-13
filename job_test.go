@@ -110,7 +110,7 @@ func TestJob_Error(t *testing.T) {
 func TestJob_ErrHandler(t *testing.T) {
 	var errFromHandler error
 	job := &workerpool.Job{
-		ErrHandler: func(err error, panic bool) {
+		ErrHandler: func(_ *workerpool.Job, err error, panic bool) {
 			errFromHandler = err
 		},
 	}

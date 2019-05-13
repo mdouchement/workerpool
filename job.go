@@ -56,7 +56,7 @@ type Job struct {
 	AfterFunc          JobAction
 	CancelFunc         JobAction
 	// ErrHandler is executed when an error or a panic occur.
-	ErrHandler func(err error, panic bool)
+	ErrHandler func(j *Job, err error, panic bool)
 }
 
 // Init initializes the job.
@@ -66,7 +66,7 @@ func (j *Job) Init(log Logger) {
 	j.mu = sync.Mutex{}
 
 	if j.ErrHandler == nil {
-		j.ErrHandler = func(err error, panic bool) {
+		j.ErrHandler = func(j *Job, err error, panic bool) {
 			if panic {
 				stack := make([]byte, 4<<10)
 				length := runtime.Stack(stack, true)
@@ -90,7 +90,7 @@ func (j *Job) Init(log Logger) {
 
 			j.setStatus(FAILED)
 			j.setError(err)
-			j.ErrHandler(err, true)
+			j.ErrHandler(j, err, true)
 		}
 	}
 
@@ -200,7 +200,7 @@ func (j *Job) Error() error {
 }
 
 func (j *Job) setError(err error) {
-	defer j.ErrHandler(err, false)
+	defer j.ErrHandler(j, err, false)
 
 	j.mu.Lock()
 	defer j.mu.Unlock()
