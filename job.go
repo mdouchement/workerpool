@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	uuid "github.com/gofrs/uuid"
-
 	tomb "gopkg.in/tomb.v2"
 )
 
@@ -88,9 +87,7 @@ func (j *Job) Init(log Logger) {
 				err = fmt.Errorf("%v", r)
 			}
 
-			j.setStatus(FAILED)
-			j.setError(err)
-			j.ErrHandler(j, err, true)
+			j.setError(err, true)
 		}
 	}
 
@@ -99,11 +96,6 @@ func (j *Job) Init(log Logger) {
 	}
 	t, _ := tomb.WithContext(j.ctx)
 	j.tomb = t
-
-	if j.ActionFunc == nil {
-		j.setError(ErrActionNotDefined)
-		return
-	}
 
 	if j.CancelFunc == nil {
 		j.CancelFunc = EmptyAction
@@ -119,6 +111,11 @@ func (j *Job) Init(log Logger) {
 
 	if j.AfterFunc == nil {
 		j.AfterFunc = EmptyAction
+	}
+
+	if j.ActionFunc == nil {
+		j.setError(ErrActionNotDefined, false)
+		return
 	}
 
 	j.setStatus(PENDING)
@@ -163,7 +160,7 @@ func (j *Job) Cancel() {
 
 	err := j.CancelFunc(j)
 	if err != nil {
-		j.setError(err)
+		j.setError(err, false)
 	}
 
 	j.tomb.Kill(nil)
@@ -180,8 +177,12 @@ func (j *Job) Status() string {
 
 func (j *Job) setStatus(status string) {
 	defer func() {
-		if err := j.OnStatusChangeFunc(j); err != nil && j.Error() == nil {
-			j.setError(err)
+		if err := j.OnStatusChangeFunc(j); err != nil {
+			if j.Error() == nil {
+				j.setError(err, false)
+				return
+			}
+			j.ErrHandler(j, err, false) // Job already failed, just run the latest thing we can do.
 		}
 	}()
 
@@ -199,8 +200,9 @@ func (j *Job) Error() error {
 	return j.err
 }
 
-func (j *Job) setError(err error) {
-	defer j.ErrHandler(j, err, false)
+func (j *Job) setError(err error, panic bool) {
+	defer j.ErrHandler(j, err, panic)
+	defer j.setStatus(FAILED) // Executed before ErrHandler
 
 	j.mu.Lock()
 	defer j.mu.Unlock()
@@ -214,22 +216,19 @@ func (j *Job) run() (err error) {
 	j.setStatus(RUNNING)
 
 	if err = j.BeforeFunc(j); err != nil {
-		j.setStatus(FAILED)
-		j.setError(err)
+		j.setError(err, false)
 		return
 	}
 
 	err = j.ActionFunc(j)
 	if err != nil {
-		j.setStatus(FAILED)
-		j.setError(err)
+		j.setError(err, false)
 		return
 	}
 
 	err = j.AfterFunc(j)
 	if err != nil {
-		j.setStatus(FAILED)
-		j.setError(err)
+		j.setError(err, false)
 		return
 	}
 
