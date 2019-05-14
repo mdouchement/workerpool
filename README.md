@@ -64,10 +64,10 @@ func main() {
 			return nil
 		},
 
-    // Triggered when an error or panic occurred.
-    ErrHandler: func(err error, panic bool) {
-      // Do something with the error.
-    },
+		// Triggered when an error or panic occurred.
+		ErrHandler: func(j *workerpool.Job, err error, panic bool) {
+			// Do something with the error (and j.Context()).
+		},
 	}
 
 	id := workerpool.Send(job)
