@@ -112,6 +112,32 @@ func TestSetPoolSize(t *testing.T) {
 	assert.Equal(t, size, size2)
 }
 
+func TestShutdown(t *testing.T) {
+	pool := workerpool.New(2, 10)
+	// pool.SetLogger(&nullLogger{})
+
+	lock := make(chan bool)
+	var completed bool
+
+	job := &workerpool.Job{
+		BeforeFunc: func(j *workerpool.Job) error {
+			<- lock
+			return nil
+		},
+		ActionFunc: func(j *workerpool.Job) error {
+			time.Sleep(250 * time.Millisecond)
+			completed = true
+			return nil
+		},
+	}
+	pool.Send(job)
+	time.Sleep(100* time.Millisecond)
+	close(lock)
+	pool.Shutdown()
+
+	assert.True(t, completed)
+}
+
 func TestGetJobsMetrics(t *testing.T) {
 	time.Sleep(4 * time.Second) // Wait running jobs
 	m := map[string]interface{}{

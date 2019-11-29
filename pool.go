@@ -41,6 +41,11 @@ func SetPoolSize(n int) {
 	pool.SetPoolSize(n)
 }
 
+// Shutdown waits job completion and shrink the pool to 0.
+func Shutdown() {
+	pool.Shutdown()
+}
+
 // GetJobsMetrics returns the metrics about the workerpool.
 func GetJobsMetrics() map[string]interface{} {
 	return pool.GetJobsMetrics()
@@ -137,6 +142,17 @@ func (w *Workerpool) SetPoolSize(n int) {
 			w.log.Println("A worker has been started")
 		}
 	}
+}
+
+// Shutdown waits job completion and shrink the pool to 0.
+func (w *Workerpool) Shutdown() {
+	w.poolMutex.Lock()
+	defer w.poolMutex.Unlock()
+
+	w.log.Println("Shutting down")
+	w.pool.Stop()
+	w.workers = w.workers[:0]
+	w.log.Println("Gracefully shutdown")
 }
 
 // GetJobsMetrics returns the metrics about the workerpool.
