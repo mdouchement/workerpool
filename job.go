@@ -214,6 +214,9 @@ func (j *Job) run() (err error) {
 	defer j.recover()
 
 	j.setStatus(RUNNING)
+	if j.Error() != nil {
+		return j.Error()
+	}
 
 	if err = j.BeforeFunc(j); err != nil {
 		j.setError(err, false)
