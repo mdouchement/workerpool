@@ -1,7 +1,6 @@
 # Workerpool
 
-[![CircleCI](https://circleci.com/gh/mdouchement/workerpool.svg?style=shield)](https://circleci.com/gh/mdouchement/workerpool)
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/mdouchement/workerpool)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/mdouchement/workerpool)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mdouchement/workerpool)](https://goreportcard.com/report/github.com/mdouchement/workerpool)
 [![License](https://img.shields.io/github/license/mdouchement/workerpool.svg)](http://opensource.org/licenses/MIT)
 
