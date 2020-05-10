@@ -1,12 +1,15 @@
 package workerpool
 
-import "sync"
+import (
+	"sync"
+)
 
 type registry struct {
 	sync.RWMutex
 	pool       *Workerpool
 	jobs       map[string]*Job
 	cancelChan chan string
+	stsEnabled bool
 	sts        map[string]map[string]struct{}
 }
 
@@ -67,6 +70,13 @@ func (r *registry) cancel(id string) {
 	r.cancelChan <- id
 }
 
+func (r *registry) statusRecording(enabled bool) {
+	r.Lock()
+	defer r.Unlock()
+
+	r.stsEnabled = enabled
+}
+
 func (r *registry) statuses() map[string]interface{} {
 	r.Lock()
 	defer r.Unlock()
@@ -82,6 +92,13 @@ func (r *registry) statuses() map[string]interface{} {
 func (r *registry) updateStatus(id, status string) {
 	r.Lock()
 	defer r.Unlock()
+
+	if !r.stsEnabled {
+		if status == CANCELLED || status == COMPLETED || status == FAILED {
+			delete(r.jobs, id)
+		}
+		return
+	}
 
 	for _, state := range []string{PENDING, RUNNING, COMPLETED, FAILED} {
 		delete(r.sts[state], id)

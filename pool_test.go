@@ -24,31 +24,37 @@ func TestSend(t *testing.T) {
 }
 
 func TestGetJob(t *testing.T) {
+	lock := make(chan bool)
+
 	job := &workerpool.Job{
 		ActionFunc: func(j *workerpool.Job) error {
-			time.Sleep(2 * time.Second)
+			<-lock
 			return nil
 		},
 	}
 	jobID := workerpool.Send(job)
 
 	job2 := workerpool.GetJob(jobID)
-
 	assert.Equal(t, job, job2)
+
+	close(lock)
 }
 
 func TestGetJobStatus(t *testing.T) {
+	lock := make(chan bool)
+
 	job := &workerpool.Job{
 		ActionFunc: func(j *workerpool.Job) error {
-			time.Sleep(2 * time.Second)
+			<-lock
 			return nil
 		},
 	}
 	jobID := workerpool.Send(job)
 
 	status := workerpool.GetJobStatus(jobID)
-
 	assert.Equal(t, status, workerpool.PENDING)
+
+	close(lock)
 }
 
 func TestOnError(t *testing.T) {
@@ -114,40 +120,71 @@ func TestSetPoolSize(t *testing.T) {
 
 func TestShutdown(t *testing.T) {
 	pool := workerpool.New(2, 10)
-	// pool.SetLogger(&nullLogger{})
+	pool.SetLogger(&nullLogger{})
 
-	lock := make(chan bool)
-	var completed bool
+	lock1 := make(chan bool)
+	lock2 := make(chan bool)
+	sleep := 250 * time.Millisecond
+	var elapsed time.Duration
 
 	job := &workerpool.Job{
 		BeforeFunc: func(j *workerpool.Job) error {
-			<- lock
+			close(lock1)
 			return nil
 		},
 		ActionFunc: func(j *workerpool.Job) error {
-			time.Sleep(250 * time.Millisecond)
-			completed = true
+			start := time.Now()
+			<-lock2
+			time.Sleep(sleep)
+			elapsed = time.Since(start)
 			return nil
 		},
 	}
 	pool.Send(job)
-	time.Sleep(100* time.Millisecond)
-	close(lock)
+
+	<-lock1
+	close(lock2)
 	pool.Shutdown()
 
-	assert.True(t, completed)
+	assert.InEpsilon(t, sleep.Milliseconds(), elapsed.Milliseconds(), 10)
 }
 
 func TestGetJobsMetrics(t *testing.T) {
-	time.Sleep(4 * time.Second) // Wait running jobs
+	workerpool.RecordJobsMetrics(true)
+	defer workerpool.RecordJobsMetrics(false)
+
 	m := map[string]interface{}{
 		workerpool.PENDING:   0,
 		workerpool.RUNNING:   0,
-		workerpool.COMPLETED: 3,
-		workerpool.FAILED:    1,
-		workerpool.CANCELLED: 1,
+		workerpool.COMPLETED: 0,
+		workerpool.FAILED:    0,
+		workerpool.CANCELLED: 0,
 	}
-	metrics := workerpool.GetJobsMetrics()
 
+	metrics := workerpool.GetJobsMetrics()
 	assert.Equal(t, m, metrics)
+
+	//
+	//
+
+	lock1 := make(chan bool)
+	lock2 := make(chan bool)
+
+	workerpool.Send(&workerpool.Job{
+		BeforeFunc: func(j *workerpool.Job) error {
+			close(lock1)
+			return nil
+		},
+		ActionFunc: func(j *workerpool.Job) error {
+			<-lock2
+			return nil
+		},
+	})
+	m[workerpool.RUNNING] = 1
+
+	<-lock1
+	metrics = workerpool.GetJobsMetrics()
+	assert.Equal(t, m, metrics)
+
+	close(lock2)
 }
