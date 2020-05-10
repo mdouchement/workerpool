@@ -46,6 +46,11 @@ func Shutdown() {
 	pool.Shutdown()
 }
 
+// RecordJobsMetrics records or not the metrics about the workerpool.
+func RecordJobsMetrics(enabled bool) {
+	pool.RecordJobsMetrics(enabled)
+}
+
 // GetJobsMetrics returns the metrics about the workerpool.
 func GetJobsMetrics() map[string]interface{} {
 	return pool.GetJobsMetrics()
@@ -153,6 +158,11 @@ func (w *Workerpool) Shutdown() {
 	w.pool.Stop()
 	w.workers = w.workers[:0]
 	w.log.Println("Gracefully shutdown")
+}
+
+// RecordJobsMetrics records or not the metrics about the workerpool.
+func (w *Workerpool) RecordJobsMetrics(enabled bool) {
+	w.reg.statusRecording(enabled)
 }
 
 // GetJobsMetrics returns the metrics about the workerpool.
