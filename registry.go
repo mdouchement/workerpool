@@ -34,7 +34,7 @@ func (r *registry) init() {
 	go func() {
 		for id := range r.cancelChan {
 			if job := r.get(id); job != nil {
-				r.pool.log.Printf("workerpool: Canceling job %s\n", job.ID())
+				r.pool.log.Printf("workerpool: Canceling job %s", job.ID())
 				job.Cancel()
 				job.setStatus(CANCELLED)
 			}
@@ -45,7 +45,7 @@ func (r *registry) init() {
 func (r *registry) add(job *Job) string {
 	change := job.OnStatusChangeFunc
 	job.OnStatusChangeFunc = func(j *Job) error {
-		r.pool.log.Printf("workerpool: Job %s is %s\n", job.ID(), j.Status())
+		r.pool.log.Printf("workerpool: Job %s is %s", job.ID(), j.Status())
 
 		defer r.updateStatus(job.ID(), j.Status())
 		return change(j)
