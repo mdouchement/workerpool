@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	wp "github.com/dc0d/workerpool"
+	wp "github.com/dc0d/workerpool/v4"
 )
 
 var pool = NewDefault()
