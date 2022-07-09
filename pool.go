@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	wp "github.com/dc0d/workerpool/v4"
+	wp "github.com/dc0d/workerpool/v5"
 )
 
 var pool = NewDefault()
@@ -91,7 +91,7 @@ func New(workers, queueSize int) *Workerpool {
 func (w *Workerpool) Send(job *Job) string {
 	job.Init(w.log)
 	w.reg.add(job)
-	w.pool.Queue(job.Run)
+	w.pool.Queue(job.Run, 0)
 
 	return job.ID()
 }
