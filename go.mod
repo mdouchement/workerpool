@@ -1,6 +1,8 @@
 module github.com/mdouchement/workerpool
 
-go 1.22
+go 1.23.0
+
+toolchain go1.24.2
 
 require (
 	github.com/dc0d/workerpool/v5 v5.0.2
@@ -12,6 +14,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/net v0.39.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
